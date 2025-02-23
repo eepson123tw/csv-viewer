@@ -1,23 +1,36 @@
 <!-- eslint-disable vue/require-v-for-key -->
 <script setup lang="ts">
-import { ref } from 'vue'
-import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs'
+import { ref, type Ref } from 'vue'
+import * as XLSX from 'xlsx'
 
-const data = ref([])
-const workbook = ref(null)
-const sheetNames = ref([])
-const currentSheet = ref('')
-const error = ref('')
-const fileInputRef = ref(null)
+interface ExcelData {
+  [key: string]: string | number | Date | null
+}
 
-const handleFileUpload = (event) => {
-  const file = event.target.files[0]
+interface FileReaderEvent extends ProgressEvent {
+  target: FileReader & EventTarget
+}
+
+type SheetData = Array<Array<string | number | Date | null>>
+
+// Typed refs
+const data: Ref<SheetData> = ref([])
+const workbook: Ref<XLSX.WorkBook | null> = ref(null)
+const sheetNames: Ref<string[]> = ref([])
+const currentSheet: Ref<string> = ref('')
+const error: Ref<string> = ref('')
+const fileInputRef: Ref<HTMLInputElement | null> = ref(null)
+
+// Event handlers with TypeScript
+const handleFileUpload = (event: Event): void => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
   if (!file) return
 
   const reader = new FileReader()
-  reader.onload = (e) => {
+  reader.onload = (e: ProgressEvent<FileReader>) => {
     try {
-      const fileData = new Uint8Array(e.target.result)
+      const fileData = new Uint8Array(e.target?.result as ArrayBuffer)
       workbook.value = XLSX.read(fileData, {
         type: 'array',
         cellDates: true,
@@ -28,35 +41,34 @@ const handleFileUpload = (event) => {
       currentSheet.value = sheetNames.value[0]
       loadSheet(currentSheet.value)
       error.value = ''
-    } catch (err) {
-      error.value = 'Error reading Excel file: ' + err.message
+    } catch (err: unknown) {
+      error.value = `Error reading Excel file: ${err instanceof Error ? err.message : 'Unknown error'}`
       console.error('Error:', err)
     }
   }
-  reader.onerror = (err) => {
-    error.value = 'Error reading file: ' + err
+  reader.onerror = (err: ProgressEvent<FileReader>) => {
+    error.value = `Error reading file: ${err}`
   }
   reader.readAsArrayBuffer(file)
 }
 
-const loadSheet = (sheetName) => {
+const loadSheet = (sheetName: string): void => {
   if (!workbook.value) return
   const worksheet = workbook.value.Sheets[sheetName]
   data.value = XLSX.utils.sheet_to_json(worksheet, {
     header: 1,
     defval: '',
-  })
+  }) as SheetData
 }
 
-const changeSheet = () => {
+const changeSheet = (): void => {
   loadSheet(currentSheet.value)
 }
 
-const triggerFileInput = () => {
+const triggerFileInput = (): void => {
   fileInputRef.value?.click()
 }
 </script>
-
 <template>
   <div class="card">
     <div class="card-header">
@@ -113,7 +125,7 @@ const triggerFileInput = () => {
           </thead>
           <tbody>
             <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex">
-              <td v-for="(cell, cellIndex) in row" :key="cell+cellIndex">
+              <td v-for="(cell, cellIndex) in row" :key="cellIndex">
                 {{ cell?.toString() || '' }}
               </td>
             </tr>
