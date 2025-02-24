@@ -61,7 +61,7 @@ const getExcelViewerUrl = computed(() => {
     wdPrint: 'True'
   })
 
-  return `${baseUrl}https://github.com/eepson123tw/csv-viewer/blob/master/public/test.xlsx`
+  return `${baseUrl}https://github.com/eepson123tw/csv-viewer/raw/638bad198b4bd86e039ec369e32547e809c49a7e/public/test.xlsx`
 })
 
 // Clean up the blob URL when component is unmounted
