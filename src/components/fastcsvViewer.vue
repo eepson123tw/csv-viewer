@@ -33,16 +33,16 @@
 import { ref } from 'vue'
 import { parse } from '@fast-csv/parse'
 
-// 定義類型
+
 type CSVRow = Record<string, string | number>
 type Headers = string[]
 
-// 定義響應式變數
+
 const csvData = ref<CSVRow[]>([])
 const headers = ref<Headers>([])
 const error = ref<string | null>(null)
 
-// 文件上傳處理函數
+
 const handleFileUpload = (event: Event): void => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
