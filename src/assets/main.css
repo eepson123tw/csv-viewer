@@ -157,7 +157,7 @@ a,
   align-items: center;
   padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
-  width: 600px;
+  min-width: 600px;
 }
 
 .card-title {

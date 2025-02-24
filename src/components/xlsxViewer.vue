@@ -72,6 +72,10 @@ const changeSheet = (): void => {
 const triggerFileInput = (): void => {
   fileInputRef.value?.click()
 }
+
+const printRow = (row:(string | number | Date | null)[])=>{
+  console.log(row)
+}
 </script>
 <template>
   <div class="card">
@@ -128,7 +132,7 @@ const triggerFileInput = (): void => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex">
+            <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex" @click="printRow(row)">
               <td v-for="(cell, cellIndex) in row" :key="cellIndex">
                 {{ cell?.toString() || '' }}
               </td>
