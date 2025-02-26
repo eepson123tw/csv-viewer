@@ -4,15 +4,15 @@
       <h2 class="card-title">Excel Viewer<span></span></h2>
     </div>
     <div class="p-2">
-        <h3>Option 1: Enter Public Excel URL</h3>
-        <input
-          v-model="publicUrl"
-          type="text"
-          placeholder="https://github.com/eepson123tw/csv-viewer/raw/refs/heads/master/public/test3.xlsx"
-          class="url-input"
-          @input="handleUrlInput"
-        />
-      </div>
+      <h3>Option 1: Enter Public Excel URL</h3>
+      <input
+        v-model="publicUrl"
+        type="text"
+        placeholder="https://github.com/eepson123tw/csv-viewer/raw/refs/heads/master/public/test3.xlsx"
+        class="url-input"
+        @input="handleUrlInput"
+      />
+    </div>
 
     <div v-if="viewerUrl" class="viewer-section">
       <iframe
@@ -74,7 +74,9 @@ const handleFileUpload = async (event: Event) => {
     // For demonstration, using a public URL
     // In production, you would upload the file to your server here
     error.value = 'File upload requires server implementation. Please use a public URL instead.'
-    messages.value.push(`[${new Date().toLocaleTimeString()}] Note: Local file upload requires server implementation`)
+    messages.value.push(
+      `[${new Date().toLocaleTimeString()}] Note: Local file upload requires server implementation`,
+    )
 
     // Example server upload code (commented out):
     /*
@@ -110,7 +112,8 @@ const handleIframeLoad = () => {
   margin-bottom: 20px;
 }
 
-.url-input, .file-input {
+.url-input,
+.file-input {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;

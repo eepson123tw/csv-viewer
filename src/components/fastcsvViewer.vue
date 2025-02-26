@@ -33,15 +33,12 @@
 import { ref } from 'vue'
 import { parse } from '@fast-csv/parse'
 
-
 type CSVRow = Record<string, string | number>
 type Headers = string[]
-
 
 const csvData = ref<CSVRow[]>([])
 const headers = ref<Headers>([])
 const error = ref<string | null>(null)
-
 
 const handleFileUpload = (event: Event): void => {
   const target = event.target as HTMLInputElement

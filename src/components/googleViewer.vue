@@ -35,7 +35,7 @@
           v-for="file in files"
           :key="file.id"
           @click="selectFile(file)"
-          :class="{ 'selected': selectedFile && selectedFile.id === file.id }"
+          :class="{ selected: selectedFile && selectedFile.id === file.id }"
         >
           <img :src="file.iconLink" alt="file icon" class="file-icon" />
           <span>{{ file.name }}</span>
@@ -75,37 +75,37 @@
     </div>
   </div>
 </template>
-
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
 
 // Define interfaces for Google API types
 interface GoogleDriveFile {
-  id: string;
-  name: string;
-  mimeType: string;
-  iconLink: string;
-  webViewLink?: string;
-  webContentLink?: string;
+  id: string
+  name: string
+  mimeType: string
+  iconLink: string
+  webViewLink?: string
+  webContentLink?: string
 }
 
 interface GoogleApiError {
-  message?: string;
-  error?: string;
-  details?: string;
+  message?: string
+  error?: string
+  details?: string
 }
 
 interface GoogleTokenResponse {
-  access_token: string;
-  expires_in: number;
-  scope: string;
-  token_type: string;
+  access_token: string
+  expires_in: number
+  scope: string
+  token_type: string
 }
 
 interface GoogleCredential {
-  client_id: string;
-  credential: string;
-  select_by: string;
+  client_id: string
+  credential: string
+  select_by: string
 }
 
 // Augment the window interface to include Google Identity Services
@@ -114,122 +114,122 @@ declare global {
     google: {
       accounts: {
         id: {
-          initialize: (config: any) => void;
-          renderButton: (parent: HTMLElement, options: any) => void;
-          prompt: () => void;
-        };
+          initialize: (config: any) => void
+          renderButton: (parent: HTMLElement, options: any) => void
+          prompt: () => void
+        }
         oauth2: {
           initTokenClient: (config: any) => {
-            requestAccessToken: (options?: { prompt?: string }) => Promise<GoogleTokenResponse>;
-          };
-        };
-      };
-    };
+            requestAccessToken: (options?: { prompt?: string }) => Promise<GoogleTokenResponse>
+          }
+        }
+      }
+    }
     gapi: {
-      load: (api: string, callback: () => void) => void;
+      load: (api: string, callback: () => void) => void
       client: {
-        init: (config: any) => Promise<void>;
+        init: (config: any) => Promise<void>
         drive: {
           files: {
-            list: (params: any) => Promise<any>;
-            get: (params: any) => Promise<any>;
-          };
-        };
-        setToken: (token: { access_token?: string } | null) => void;
-      };
-    };
+            list: (params: any) => Promise<any>
+            get: (params: any) => Promise<any>
+          }
+        }
+        setToken: (token: { access_token?: string } | null) => void
+      }
+    }
   }
 }
 
 // Google API configuration - Use environment variables
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY
+const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+const SCOPES = 'https://www.googleapis.com/auth/drive.readonly'
 
 // Maximum log messages to display
-const MAX_LOG_MESSAGES = 50;
+const MAX_LOG_MESSAGES = 50
 
 // Component state
-const isAuthenticated = ref<boolean>(false);
-const authLoading = ref<boolean>(false);
-const signOutLoading = ref<boolean>(false);
-const filesLoading = ref<boolean>(false);
-const viewerLoading = ref<boolean>(false);
-const userEmail = ref<string>('');
-const files = ref<GoogleDriveFile[]>([]);
-const selectedFile = ref<GoogleDriveFile | null>(null);
-const viewerUrl = ref<string>('');
-const error = ref<string>('');
-const messages = ref<string[]>([]);
-const tokenClient = ref<any>(null);
-const accessToken = ref<string>('');
-const showManualSignIn = ref<boolean>(false);
+const isAuthenticated = ref<boolean>(false)
+const authLoading = ref<boolean>(false)
+const signOutLoading = ref<boolean>(false)
+const filesLoading = ref<boolean>(false)
+const viewerLoading = ref<boolean>(false)
+const userEmail = ref<string>('')
+const files = ref<GoogleDriveFile[]>([])
+const selectedFile = ref<GoogleDriveFile | null>(null)
+const viewerUrl = ref<string>('')
+const error = ref<string>('')
+const messages = ref<string[]>([])
+const tokenClient = ref<any>(null)
+const accessToken = ref<string>('')
+const showManualSignIn = ref<boolean>(false)
 
 // Check for tokens in URL (for redirect flow)
 onMounted(() => {
-  logMessage('Component mounted, initializing...');
+  logMessage('Component mounted, initializing...')
 
   // Check if we have a token in the URL (from redirect flow)
-  const hash = window.location.hash;
+  const hash = window.location.hash
   if (hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.substring(1));
-    const token = params.get('access_token');
+    const params = new URLSearchParams(hash.substring(1))
+    const token = params.get('access_token')
     if (token) {
       // Remove the token from the URL to prevent leaks
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.history.replaceState({}, document.title, window.location.pathname)
 
       // Use the token
-      accessToken.value = token;
-      window.gapi.client.setToken({ access_token: token });
-      isAuthenticated.value = true;
-      logMessage('Authentication successful from redirect');
+      accessToken.value = token
+      window.gapi.client.setToken({ access_token: token })
+      isAuthenticated.value = true
+      logMessage('Authentication successful from redirect')
 
       // Get user email
-      fetchUserEmail();
+      fetchUserEmail()
     }
   }
 
-  loadGoogleAPIs();
+  loadGoogleAPIs()
 
   // Show manual sign-in button after a delay if Google button doesn't load
   setTimeout(() => {
     if (!isAuthenticated.value && !document.querySelector('#g_id_signin iframe')) {
-      showManualSignIn.value = true;
-      logMessage('Google Sign-In button failed to load, showing manual button');
+      showManualSignIn.value = true
+      logMessage('Google Sign-In button failed to load, showing manual button')
     }
-  }, 3000);
-});
+  }, 3000)
+})
 
 function loadGoogleAPIs() {
-  logMessage('Loading Google APIs...');
+  logMessage('Loading Google APIs...')
 
   // Load the GIS Library
-  const gisScript = document.createElement('script');
-  gisScript.src = 'https://accounts.google.com/gsi/client';
-  gisScript.async = true;
-  gisScript.defer = true;
+  const gisScript = document.createElement('script')
+  gisScript.src = 'https://accounts.google.com/gsi/client'
+  gisScript.async = true
+  gisScript.defer = true
   gisScript.onload = () => {
-    logMessage('Google Identity Services loaded');
+    logMessage('Google Identity Services loaded')
 
     // Load the GAPI Library
-    const gapiScript = document.createElement('script');
-    gapiScript.src = 'https://apis.google.com/js/api.js';
-    gapiScript.async = true;
-    gapiScript.defer = true;
+    const gapiScript = document.createElement('script')
+    gapiScript.src = 'https://apis.google.com/js/api.js'
+    gapiScript.async = true
+    gapiScript.defer = true
     gapiScript.onload = () => {
-      logMessage('Google API Client loaded');
-      window.gapi.load('client', initializeGapiClient);
-    };
+      logMessage('Google API Client loaded')
+      window.gapi.load('client', initializeGapiClient)
+    }
     gapiScript.onerror = () => {
-      handleError('Failed to load Google API Client');
-    };
-    document.body.appendChild(gapiScript);
-  };
+      handleError('Failed to load Google API Client')
+    }
+    document.body.appendChild(gapiScript)
+  }
   gisScript.onerror = () => {
-    handleError('Failed to load Google Identity Services');
-  };
-  document.body.appendChild(gisScript);
+    handleError('Failed to load Google Identity Services')
+  }
+  document.body.appendChild(gisScript)
 }
 
 async function initializeGapiClient() {
@@ -237,14 +237,17 @@ async function initializeGapiClient() {
     await window.gapi.client.init({
       apiKey: API_KEY,
       discoveryDocs: DISCOVERY_DOCS,
-    });
+    })
 
-    logMessage('Google API client initialized');
-    initializeGIS();
+    logMessage('Google API client initialized')
+    initializeGIS()
   } catch (error) {
-    const apiError = error as GoogleApiError;
-    logMessage('Failed to initialize Google API client: ' + (apiError.message || apiError.error || 'Unknown error'));
-    handleError('Failed to initialize Google API client');
+    const apiError = error as GoogleApiError
+    logMessage(
+      'Failed to initialize Google API client: ' +
+        (apiError.message || apiError.error || 'Unknown error'),
+    )
+    handleError('Failed to initialize Google API client')
   }
 }
 
@@ -256,79 +259,79 @@ function initializeGIS() {
       scope: SCOPES,
       callback: handleTokenResponse,
       // Use an empty string for prompt to use redirect instead of popup
-      prompt: ''
-    });
+      prompt: '',
+    })
 
     // Initialize the ID service
     window.google.accounts.id.initialize({
       client_id: CLIENT_ID,
       callback: handleCredentialResponse,
-      auto_select: false
-    });
+      auto_select: false,
+    })
 
     // Render the Sign In button
     try {
-      const signInElement = document.getElementById('g_id_signin');
+      const signInElement = document.getElementById('g_id_signin')
       if (signInElement) {
-        window.google.accounts.id.renderButton(
-          signInElement,
-          {
-            type: 'standard',
-            theme: 'outline',
-            size: 'large',
-            text: 'signin_with',
-            shape: 'rectangular',
-            logo_alignment: 'left',
-            width: 250
-          }
-        );
+        window.google.accounts.id.renderButton(signInElement, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: 250,
+        })
       } else {
-        logMessage('Sign-in element not found');
-        showManualSignIn.value = true;
+        logMessage('Sign-in element not found')
+        showManualSignIn.value = true
       }
     } catch (buttonError) {
-      logMessage('Error rendering sign-in button: ' + String(buttonError));
-      showManualSignIn.value = true;
+      logMessage('Error rendering sign-in button: ' + String(buttonError))
+      showManualSignIn.value = true
     }
 
-    logMessage('Google Identity Services initialized');
+    logMessage('Google Identity Services initialized')
   } catch (error) {
-    const apiError = error as GoogleApiError;
-    logMessage('Failed to initialize Google Identity Services: ' + (apiError.message || apiError.error || 'Unknown error'));
-    handleError('Failed to initialize authentication services');
-    showManualSignIn.value = true;
+    const apiError = error as GoogleApiError
+    logMessage(
+      'Failed to initialize Google Identity Services: ' +
+        (apiError.message || apiError.error || 'Unknown error'),
+    )
+    handleError('Failed to initialize authentication services')
+    showManualSignIn.value = true
   }
 }
 
 function handleManualSignIn() {
   if (tokenClient.value) {
-    tokenClient.value.requestAccessToken();
+    tokenClient.value.requestAccessToken()
   } else {
-    handleError('Authentication not initialized yet. Please try again in a moment.');
+    handleError('Authentication not initialized yet. Please try again in a moment.')
   }
 }
 
 function handleCredentialResponse(response: GoogleCredential) {
-  logMessage('Received credential response, requesting access token');
+  logMessage('Received credential response, requesting access token')
   // After getting the credential, we need to get an access token
   if (tokenClient.value) {
-    tokenClient.value.requestAccessToken();
+    tokenClient.value.requestAccessToken()
   }
 }
 
 function handleTokenResponse(tokenResponse: GoogleTokenResponse) {
   if (tokenResponse.access_token) {
     // Set the access token in GAPI
-    window.gapi.client.setToken({ access_token: tokenResponse.access_token });
-    accessToken.value = tokenResponse.access_token;
-    isAuthenticated.value = true;
+    window.gapi.client.setToken({ access_token: tokenResponse.access_token })
+    accessToken.value = tokenResponse.access_token
+    isAuthenticated.value = true
 
     // Get the user email
-    fetchUserEmail();
+    fetchUserEmail()
 
-    logMessage('Authentication successful');
+    logMessage('Authentication successful')
   } else {
-    handleError('Failed to obtain access token');
+    handleError('Failed to obtain access token')
   }
 }
 
@@ -336,158 +339,162 @@ async function fetchUserEmail() {
   try {
     const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: {
-        'Authorization': `Bearer ${accessToken.value}`
-      }
-    });
+        Authorization: `Bearer ${accessToken.value}`,
+      },
+    })
 
     if (response.ok) {
-      const data = await response.json();
-      userEmail.value = data.email;
-      logMessage(`Connected as: ${userEmail.value}`);
+      const data = await response.json()
+      userEmail.value = data.email
+      logMessage(`Connected as: ${userEmail.value}`)
     } else {
-      logMessage('Failed to fetch user information');
+      logMessage('Failed to fetch user information')
     }
   } catch (error) {
-    logMessage('Error fetching user email');
+    logMessage('Error fetching user email')
   }
 }
 
 function signOut() {
-  signOutLoading.value = true;
+  signOutLoading.value = true
   try {
     // Clear the token from GAPI
-    window.gapi.client.setToken(null);
-    accessToken.value = '';
-    isAuthenticated.value = false;
-    userEmail.value = '';
-    files.value = [];
-    selectedFile.value = null;
-    viewerUrl.value = '';
+    window.gapi.client.setToken(null)
+    accessToken.value = ''
+    isAuthenticated.value = false
+    userEmail.value = ''
+    files.value = []
+    selectedFile.value = null
+    viewerUrl.value = ''
 
-    logMessage('Signed out successfully');
+    logMessage('Signed out successfully')
 
     // Reload the Google Identity Services
-    window.google.accounts.id.prompt();
+    window.google.accounts.id.prompt()
   } catch (error) {
-    handleError('Failed to sign out');
+    handleError('Failed to sign out')
   } finally {
-    signOutLoading.value = false;
+    signOutLoading.value = false
   }
 }
 
 async function loadDriveFiles() {
   if (!isAuthenticated.value) {
-    handleError('Please sign in first');
-    return;
+    handleError('Please sign in first')
+    return
   }
 
-  filesLoading.value = true;
-  logMessage('Loading Excel files from Google Drive...');
-  files.value = [];
-  selectedFile.value = null;
+  filesLoading.value = true
+  logMessage('Loading Excel files from Google Drive...')
+  files.value = []
+  selectedFile.value = null
 
   try {
     // Search for Excel files only
     const response = await window.gapi.client.drive.files.list({
-      'pageSize': 50,
-      'fields': 'files(id, name, mimeType, iconLink, webViewLink)',
-      'q': "mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or mimeType='application/vnd.ms-excel'"
-    });
+      pageSize: 50,
+      fields: 'files(id, name, mimeType, iconLink, webViewLink)',
+      q: "mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or mimeType='application/vnd.ms-excel'",
+    })
 
-    files.value = response.result.files || [];
-    logMessage(`Found ${files.value.length} Excel files`);
+    files.value = response.result.files || []
+    logMessage(`Found ${files.value.length} Excel files`)
 
     if (files.value.length === 0) {
-      logMessage('No Excel files found in your Google Drive');
+      logMessage('No Excel files found in your Google Drive')
     }
   } catch (error) {
-    const apiError = error as GoogleApiError;
-    const errorMessage = apiError.message || apiError.error || 'Unknown error';
-    logMessage('Failed to load files: ' + errorMessage);
-    handleError('Failed to load files from Google Drive');
+    const apiError = error as GoogleApiError
+    const errorMessage = apiError.message || apiError.error || 'Unknown error'
+    logMessage('Failed to load files: ' + errorMessage)
+    handleError('Failed to load files from Google Drive')
   } finally {
-    filesLoading.value = false;
+    filesLoading.value = false
   }
 }
 
 function selectFile(file: GoogleDriveFile) {
-  selectedFile.value = file;
-  logMessage(`Selected file: ${file.name}`);
+  selectedFile.value = file
+  logMessage(`Selected file: ${file.name}`)
 }
 
 async function viewSelectedFile() {
-  if (!selectedFile.value) return;
+  if (!selectedFile.value) return
 
-  viewerLoading.value = true;
-  logMessage(`Preparing to view file: ${selectedFile.value.name}`);
+  viewerLoading.value = true
+  logMessage(`Preparing to view file: ${selectedFile.value.name}`)
 
   try {
     // Get sharing permissions to create a publicly accessible URL
     const response = await window.gapi.client.drive.files.get({
       fileId: selectedFile.value.id,
-      fields: 'webContentLink,webViewLink'
-    });
+      fields: 'webContentLink,webViewLink',
+    })
 
     // Try different viewer options
-    const viewerUrls = [];
+    const viewerUrls = []
 
     // Option 1: Microsoft Office Viewer
     if (response.result.webContentLink) {
-
-      viewerUrls.push(`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(response.result.webContentLink)}`);
+      viewerUrls.push(
+        `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(response.result.webContentLink)}`,
+      )
     }
 
     // Option 2: Direct Google Drive preview (may require permission)
-    viewerUrls.push(`https://drive.google.com/file/d/${selectedFile.value.id}/preview`);
+    viewerUrls.push(`https://drive.google.com/file/d/${selectedFile.value.id}/preview`)
 
     // Option 3: Google Docs Viewer
-    viewerUrls.push(`https://docs.google.com/viewer?url=${encodeURIComponent(response.result.webViewLink || '')}&embedded=true`);
+    viewerUrls.push(
+      `https://docs.google.com/viewer?url=${encodeURIComponent(response.result.webViewLink || '')}&embedded=true`,
+    )
 
     // https://docs.google.com/spreadsheets/d/15LWckUHWOidBmSweqlt0Yp9KlNxg6lZU/edit?usp=drive_link&ouid=101600230923984204515&rtpof=true&sd=true
     // Option 4: Temporary access URL with token
-    const exportUrl = `https://www.googleapis.com/drive/v3/files/${selectedFile.value.id}?alt=media&access_token=${accessToken.value}`;
-    viewerUrls.push(`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(exportUrl)}`);
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${selectedFile.value.id}?alt=media&access_token=${accessToken.value}`
+    viewerUrls.push(
+      `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(exportUrl)}`,
+    )
 
     // Use the first URL option (will try others if this fails)
-    viewerUrl.value = viewerUrls[1];
-    logMessage('Using Microsoft Office viewer to display file');
-
+    viewerUrl.value = viewerUrls[1]
+    logMessage('Using Microsoft Office viewer to display file')
   } catch (error) {
-    const apiError = error as GoogleApiError;
-    const errorMessage = apiError.message || apiError.error || 'Unknown error';
-    logMessage('Failed to prepare file for viewing: ' + errorMessage);
-    handleError('Failed to prepare file for viewing');
+    const apiError = error as GoogleApiError
+    const errorMessage = apiError.message || apiError.error || 'Unknown error'
+    logMessage('Failed to prepare file for viewing: ' + errorMessage)
+    handleError('Failed to prepare file for viewing')
 
     // Fallback to Google Drive preview URL
     if (selectedFile.value) {
-      viewerUrl.value = `https://drive.google.com/file/d/${selectedFile.value.id}/preview`;
-      logMessage('Using fallback Google Drive preview');
+      viewerUrl.value = `https://drive.google.com/file/d/${selectedFile.value.id}/preview`
+      logMessage('Using fallback Google Drive preview')
     }
   } finally {
-    viewerLoading.value = false;
+    viewerLoading.value = false
   }
 }
 
 function handleIframeLoad() {
   if (selectedFile.value) {
-    logMessage(`File ${selectedFile.value.name} loaded successfully`);
+    logMessage(`File ${selectedFile.value.name} loaded successfully`)
   }
 }
 
 function handleError(message: string) {
-  error.value = message;
+  error.value = message
   setTimeout(() => {
-    error.value = '';
-  }, 5000);
+    error.value = ''
+  }, 5000)
 }
 
 function logMessage(message: string) {
-  const timestamp = new Date().toLocaleTimeString();
-  messages.value.push(`[${timestamp}] ${message}`);
+  const timestamp = new Date().toLocaleTimeString()
+  messages.value.push(`[${timestamp}] ${message}`)
 
   // Limit log messages to prevent performance issues
   if (messages.value.length > MAX_LOG_MESSAGES) {
-    messages.value = messages.value.slice(-MAX_LOG_MESSAGES);
+    messages.value = messages.value.slice(-MAX_LOG_MESSAGES)
   }
 }
 </script>

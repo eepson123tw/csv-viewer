@@ -73,17 +73,26 @@ const triggerFileInput = (): void => {
   fileInputRef.value?.click()
 }
 
-const printRow = (row:(string | number | Date | null)[])=>{
+const printRow = (row: (string | number | Date | null)[]) => {
   console.log(row)
 }
 </script>
 <template>
   <div class="card">
     <div class="card-header">
-      <h2 class="card-title">Excel Viewer<span>-{{props.title}}</span></h2>
+      <h2 class="card-title">
+        Excel Viewer<span>-{{ props.title }}</span>
+      </h2>
       <div class="upload-container">
         <button class="btn-upload" @click="triggerFileInput">
-          <svg xmlns="http://www.w3.org/2000/svg" class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="upload-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
@@ -102,7 +111,13 @@ const printRow = (row:(string | number | Date | null)[])=>{
 
     <div class="card-content">
       <div v-if="error" class="alert-error">
-        <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="alert-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+        >
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -111,11 +126,7 @@ const printRow = (row:(string | number | Date | null)[])=>{
       </div>
 
       <div v-if="sheetNames.length > 0" class="sheet-selector-container">
-        <select
-          v-model="currentSheet"
-          @change="changeSheet"
-          class="sheet-selector"
-        >
+        <select v-model="currentSheet" @change="changeSheet" class="sheet-selector">
           <option v-for="sheet in sheetNames" :key="sheet" :value="sheet">
             {{ sheet }}
           </option>
@@ -142,7 +153,13 @@ const printRow = (row:(string | number | Date | null)[])=>{
       </div>
 
       <div v-if="!data.length && !error" class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="empty-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+        >
           <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
           <polyline points="13 2 13 9 20 9" />
         </svg>
@@ -151,6 +168,3 @@ const printRow = (row:(string | number | Date | null)[])=>{
     </div>
   </div>
 </template>
-
-
-
