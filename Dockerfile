@@ -1,9 +1,9 @@
 FROM node:22-alpine as build-stage
 
-WORKDIR /app
-
 # Install pnpm
 RUN npm install -g pnpm
+
+WORKDIR /app
 
 # Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml* ./
@@ -23,10 +23,10 @@ ENV VITE_GOOGLE_API_KEY=$VITE_GOOGLE_API_KEY
 # Build the app
 RUN pnpm run build
 
-# Production stage
+# Production stage with Nginx
 FROM nginx:stable-alpine as production-stage
 
-# Set Cross-Origin headers
+# Configure Nginx with proper headers for Google authentication
 RUN echo 'server {\
     listen       80;\
     server_name  localhost;\
