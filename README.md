@@ -194,7 +194,7 @@ A: Yes. The app uses official Google APIs for authentication and file access. Al
 
 ## License
 
-[MIT License](LICENSE)
+[MIT License](LICENSE.md)
 
 ## Contributing
 
