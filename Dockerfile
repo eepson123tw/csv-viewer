@@ -1,4 +1,4 @@
-FROM node:22 as build-stage
+FROM node:22-alpine as build-stage
 
 WORKDIR /app
 
@@ -22,3 +22,27 @@ ENV VITE_GOOGLE_API_KEY=$VITE_GOOGLE_API_KEY
 
 # Build the app
 RUN pnpm run build
+
+# Production stage
+FROM nginx:stable-alpine as production-stage
+
+# Set Cross-Origin headers
+RUN echo 'server {\
+    listen       80;\
+    server_name  localhost;\
+    \
+    location / {\
+        add_header Cross-Origin-Opener-Policy same-origin-allow-popups;\
+        root   /usr/share/nginx/html;\
+        index  index.html index.htm;\
+        try_files $uri $uri/ /index.html;\
+    }\
+}' > /etc/nginx/conf.d/default.conf
+
+# Copy built files from build stage
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
