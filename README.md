@@ -1,8 +1,8 @@
-# Google Drive Excel Viewer
+# CSV-Viewer
 
 A web application that allows users to view and interact with Excel files stored in their Google Drive directly in the browser.
 
-![Google Drive Excel Viewer Screenshot](image.png)
+![CSV-Viewer Screenshot](image.png)
 
 ## Features
 
