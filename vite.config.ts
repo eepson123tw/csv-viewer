@@ -10,9 +10,19 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  server: {
+    allowedHosts: ['.ngrok-free.app'],
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
+    },
+    // CORS settings for
+    // development
+    cors: true
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+
 })
