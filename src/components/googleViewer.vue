@@ -1,3 +1,4 @@
+<!-- GoogleDriveExcelViewer.vue -->
 <template>
   <div class="card">
     <div class="card-header">
@@ -75,6 +76,7 @@
     </div>
   </div>
 </template>
+
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
@@ -253,13 +255,12 @@ async function initializeGapiClient() {
 
 function initializeGIS() {
   try {
-    // Initialize the token client with redirect mode (no popup)
+    // Initialize the token client - Use popup mode for better user experience
     tokenClient.value = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
       callback: handleTokenResponse,
-      // Use an empty string for prompt to use redirect instead of popup
-      prompt: '',
+      prompt: 'consent',  // Always ask for consent to ensure user understands permissions
     })
 
     // Initialize the ID service
@@ -431,34 +432,9 @@ async function viewSelectedFile() {
       fields: 'webContentLink,webViewLink',
     })
 
-    // Try different viewer options
-    const viewerUrls = []
-
-    // Option 1: Microsoft Office Viewer
-    if (response.result.webContentLink) {
-      viewerUrls.push(
-        `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(response.result.webContentLink)}`,
-      )
-    }
-
-    // Option 2: Direct Google Drive preview (may require permission)
-    viewerUrls.push(`https://drive.google.com/file/d/${selectedFile.value.id}/preview`)
-
-    // Option 3: Google Docs Viewer
-    viewerUrls.push(
-      `https://docs.google.com/viewer?url=${encodeURIComponent(response.result.webViewLink || '')}&embedded=true`,
-    )
-
-    // https://docs.google.com/spreadsheets/d/15LWckUHWOidBmSweqlt0Yp9KlNxg6lZU/edit?usp=drive_link&ouid=101600230923984204515&rtpof=true&sd=true
-    // Option 4: Temporary access URL with token
-    const exportUrl = `https://www.googleapis.com/drive/v3/files/${selectedFile.value.id}?alt=media&access_token=${accessToken.value}`
-    viewerUrls.push(
-      `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(exportUrl)}`,
-    )
-
-    // Use the first URL option (will try others if this fails)
-    viewerUrl.value = viewerUrls[1]
-    logMessage('Using Microsoft Office viewer to display file')
+    // Use Google Drive preview as the primary option
+    viewerUrl.value = `https://drive.google.com/file/d/${selectedFile.value.id}/preview`
+    logMessage('Using Google Drive preview to display file')
   } catch (error) {
     const apiError = error as GoogleApiError
     const errorMessage = apiError.message || apiError.error || 'Unknown error'
